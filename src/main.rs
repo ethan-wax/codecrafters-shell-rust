@@ -39,7 +39,8 @@ fn eval(line: &str) {
     match command {
         "echo" => exec_echo(args),
         "type" => exec_type(args),
-        "pwd" => exec_pwd(),
+        "pwd" => exec_pwd(args),
+        "cd" => exec_cd(args),
         _ => exec_command(command, args),
     }
 }
@@ -73,7 +74,7 @@ fn search_path(type_args: &str) {
 }
 
 fn find_executable(exec: &str) -> Option<String> {
-    let path = env::var("PATH").expect("PATH is not set.");
+    let path = env::var("PATH").expect("PATH is not set");
     let dirs = path.split(':');
 
     for dir in dirs {
@@ -109,11 +110,29 @@ fn exec_command(command: &str, args: Option<&str>) {
     Command::new(command)
         .args(arg_vec)
         .status()
-        .expect("Error executing command.");
+        .expect("Error executing command");
 }
 
-fn exec_pwd() {
-    let borrowed_current_dir = &env::current_dir().expect("Error reading current directory");
-    let current_dir = borrowed_current_dir.display();
-    println!("{current_dir}")
+fn exec_pwd(args: Option<&str>) {
+    let None = args else {
+        println!("pwd: too many arguments");
+        return;
+    };
+
+    let current_dir = &env::current_dir().expect("Error reading current directory");
+    let current_dir_disp = current_dir.display();
+    println!("{current_dir_disp}")
+}
+
+fn exec_cd(args: Option<&str>) {
+    let Some(loc) = args else {
+        println!("cd: missing arguments");
+        return;
+    };
+
+    let path = Path::new(loc);
+    let Ok(_)= env::set_current_dir(path) else {
+        println!("cd: {loc}: No such file or directory");
+        return;
+    };
 }
