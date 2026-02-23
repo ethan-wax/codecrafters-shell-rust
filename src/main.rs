@@ -130,7 +130,8 @@ fn exec_cd(args: Option<&str>) {
         return;
     };
 
-    let path = Path::new(loc);
+    let home = env::var("HOME").expect("Error reading from HOME");
+    let path = if loc == "~" {Path::new(home.as_str()) } else {Path::new(loc)};
     let Ok(_)= env::set_current_dir(path) else {
         println!("cd: {loc}: No such file or directory");
         return;
