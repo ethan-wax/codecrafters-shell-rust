@@ -1,5 +1,8 @@
 #[allow(unused_imports)]
 use std::io::{self, Write};
+use std::env;
+use std::fs;
+use std::os::unix::fs::PermissionsExt;
 
 
 fn main() {
@@ -53,6 +56,28 @@ fn exec_type(args: Option<&str>) {
 
     match type_args {
         "echo" | "exit" | "type" => println!("{type_args} is a shell builtin"),
-        _ => println!("{type_args}: not found")
+        _ => search_path(type_args)
     }
+}
+
+fn search_path(type_args: &str) {
+    let path = env::var("PATH").expect("PATH is not set.");
+    let dirs = path.split(':');
+
+    for dir in dirs {
+        let full = dir.to_owned() + "/" + type_args;
+        let p = std::path::Path::new(&full);
+        let exists = p.try_exists().expect("Error searching path");
+        if exists {
+            let meta = fs::metadata(&full).expect("Error reading file metadata");
+            let mode = meta.permissions().mode();
+            let executable = mode & 0o111 != 0; 
+            if executable {
+                println!("{type_args} is {full}");
+                return
+            }
+        }
+    }
+
+    println!("{type_args}: not found")
 }
