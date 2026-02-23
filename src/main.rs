@@ -23,10 +23,36 @@ fn main() {
 }
 
 fn eval(line: &str) {
-    if line.starts_with("echo ") {
-        let text = &line[5..];
-        println!("{}", text);
+    let first_space = line.find(' ').unwrap_or(line.len());
+    let command = &line[..first_space];
+    let args = if first_space < line.len() {
+        Some(&line[first_space+1..])   
     } else {
-        println!("{}: command not found", line);
+        None
+    };
+    match command {
+        "echo" => exec_echo(args),
+        "type" => exec_type(args),
+        _ => println!("{}: command not found", line)
+    }
+}
+
+fn exec_echo(args: Option<&str>) {
+    if let Some(arg) = args {
+        println!("{arg}")
+    } else {
+        println!("")
+    }
+}
+
+fn exec_type(args: Option<&str>) {
+    let Some(type_args) = args else {
+        println!("Type expects an argument");
+        return
+    };
+
+    match type_args {
+        "echo" | "exit" | "type" => println!("{type_args} is a shell builtin"),
+        _ => println!("{type_args}: not found")
     }
 }
