@@ -4,6 +4,7 @@ use std::fs;
 use std::io::{self, Write};
 use std::os::unix::fs::PermissionsExt;
 use std::process::Command;
+use std::path::Path;
 
 fn main() {
     loop {
@@ -38,6 +39,7 @@ fn eval(line: &str) {
     match command {
         "echo" => exec_echo(args),
         "type" => exec_type(args),
+        "pwd" => exec_pwd(),
         _ => exec_command(command, args),
     }
 }
@@ -57,7 +59,7 @@ fn exec_type(args: Option<&str>) {
     };
 
     match type_args {
-        "echo" | "exit" | "type" => println!("{type_args} is a shell builtin"),
+        "echo" | "exit" | "type" | "pwd" => println!("{type_args} is a shell builtin"),
         _ => search_path(type_args),
     }
 }
@@ -76,7 +78,7 @@ fn find_executable(exec: &str) -> Option<String> {
 
     for dir in dirs {
         let full = dir.to_owned() + "/" + exec;
-        let p = std::path::Path::new(&full);
+        let p = Path::new(&full);
         let exists = p.try_exists().expect("Error searching path");
         if exists {
             let meta = fs::metadata(&full).expect("Error reading file metadata");
@@ -108,4 +110,10 @@ fn exec_command(command: &str, args: Option<&str>) {
         .args(arg_vec)
         .status()
         .expect("Error executing command.");
+}
+
+fn exec_pwd() {
+    let borrowed_current_dir = &env::current_dir().expect("Error reading current directory");
+    let current_dir = borrowed_current_dir.display();
+    println!("{current_dir}")
 }
