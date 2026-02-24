@@ -50,7 +50,13 @@ fn process_line(line: &str) -> (&str, Vec<String>) {
     let mut quote = None;
     let mut stack = String::new();
     while i < line.len() {
-        if line_chars[i] == '\'' {
+        let c = line_chars[i];
+        if c == '\'' {
+            if quote.is_some() && quote.unwrap() != '\'' {
+                stack.push(c);
+                i += 1;
+                continue;
+            }
             if i < line.len() - 1 && line_chars[i + 1] == '\'' {
                 i += 2;
                 continue;
@@ -69,14 +75,38 @@ fn process_line(line: &str) -> (&str, Vec<String>) {
                 quote = None;
                 i += 1;
             }
-        } else if line_chars[i] == ' ' && quote.is_none() {
+        } else if c == '\"' {
+            if quote.is_some() && quote.unwrap() != '\"' {
+                stack.push(c);
+                i += 1;
+                continue;
+            }
+            if i < line.len() - 1 && line_chars[i + 1] == '\"' {
+                i += 2;
+                continue;
+            } else if quote.is_none() {
+                if !stack.is_empty() {
+                    args.push(stack.clone());
+                }
+                stack.clear();
+                quote = Some('\"');
+                i += 1;
+            } else {
+                if !stack.is_empty() {
+                    args.push(stack.clone());
+                }
+                stack.clear();
+                quote = None;
+                i += 1;
+            }
+        } else if c == ' ' && quote.is_none() {
             if !stack.is_empty() {
                 args.push(stack.clone());
             }
             stack.clear();
             i += 1;
         } else {
-            stack.push(line_chars[i]);
+            stack.push(c);
             i += 1;
         }
     }
