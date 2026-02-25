@@ -67,10 +67,6 @@ fn process_line(line: &str) -> (&str, Vec<String>) {
                 i += 2;
                 continue;
             } else if quote.is_none() {
-                if !stack.is_empty() {
-                    args.push(stack.clone());
-                }
-                stack.clear();
                 quote = Some('\'');
                 i += 1;
             } else {
@@ -112,8 +108,8 @@ fn process_line(line: &str) -> (&str, Vec<String>) {
             stack.clear();
             i += 1;
         } else {
-            if c == '\\' {
-                stack.push('🤪');
+            if c == '\\' && quote.is_none() {
+                stack.push('🤪'); // Using 🤪 to indicate an escaped character because it's kind of funny
             } else {
                 stack.push(c);
             }
