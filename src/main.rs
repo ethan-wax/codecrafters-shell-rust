@@ -51,7 +51,7 @@ fn process_line(line: &str) -> (&str, Vec<String>) {
     let mut stack = String::new();
     while i < line.len() {
         let c = line_chars[i];
-        if quote.is_none() && stack.ends_with('🤪') {
+        if (quote.is_none() || quote.unwrap() == '\"') && stack.ends_with('🤪') {
             stack.pop().unwrap();
             stack.push(c);
             i += 1;
@@ -82,22 +82,19 @@ fn process_line(line: &str) -> (&str, Vec<String>) {
                 stack.push(c);
                 i += 1;
                 continue;
+            } else if quote.is_some() && stack.ends_with('🤪') {
+                stack.pop().unwrap();
+                stack.push(c);
+                i += 1;
+                continue;
             }
             if i < line.len() - 1 && line_chars[i + 1] == '\"' {
                 i += 2;
                 continue;
             } else if quote.is_none() {
-                if !stack.is_empty() {
-                    args.push(stack.clone());
-                }
-                stack.clear();
                 quote = Some('\"');
                 i += 1;
             } else {
-                if !stack.is_empty() {
-                    args.push(stack.clone());
-                }
-                stack.clear();
                 quote = None;
                 i += 1;
             }
@@ -108,7 +105,7 @@ fn process_line(line: &str) -> (&str, Vec<String>) {
             stack.clear();
             i += 1;
         } else {
-            if c == '\\' && quote.is_none() {
+            if c == '\\' && (quote.is_none() || quote.unwrap() == '\"') {
                 stack.push('🤪'); // Using 🤪 to indicate an escaped character because it's kind of funny
             } else {
                 stack.push(c);
