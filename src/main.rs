@@ -51,6 +51,12 @@ fn process_line(line: &str) -> (&str, Vec<String>) {
     let mut stack = String::new();
     while i < line.len() {
         let c = line_chars[i];
+        if quote.is_none() && stack.ends_with('🤪') {
+            stack.pop().unwrap();
+            stack.push(c);
+            i += 1;
+            continue;
+        }
         if c == '\'' {
             if quote.is_some() && quote.unwrap() != '\'' {
                 stack.push(c);
@@ -106,7 +112,11 @@ fn process_line(line: &str) -> (&str, Vec<String>) {
             stack.clear();
             i += 1;
         } else {
-            stack.push(c);
+            if c == '\\' {
+                stack.push('🤪');
+            } else {
+                stack.push(c);
+            }
             i += 1;
         }
     }
